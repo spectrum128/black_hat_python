@@ -39,35 +39,23 @@ def client_sender(buffer):
         if len(buffer):
             client.send(buffer.encode())
 
-        while(True):
-            # now wait for data back
-            recv_len = 1
-            response = ""
+        # now wait for data back
+        response = ""
 
-            while True:
-                data = client.recv(4096)
-                # recv_len = len(data)
-                if not data:
-                    break
+        while True:
+            data = client.recv(4096)
 
-                response += data.decode("utf-8")
+            if not data:
+                break
 
-                #if recv_len < 4096:
-                #    break
+            response += data.decode("utf-8")
+            print(response, end="")
 
-                print(response, end="")
-
-                # wait for more input
-                buffer = input("")
-                buffer += "\n"
-
-                # send it off
-                client.send(buffer.encode("utf-8"))
-
+            # wait for more input
             try:
                 buffer = input("")
                 buffer += "\n"
-                client.send(buffer.encode())
+                client.send(buffer.encode("utf-8"))
             except EOFError:
                 print("CTRL-D detected")
                 break
