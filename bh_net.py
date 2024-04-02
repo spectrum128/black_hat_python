@@ -15,6 +15,7 @@ port = 0
 
 
 def usage():
+    """Print out a usage string to the terminal."""
     print("BHP Net Tool\n")
     print("Usage: bh_net.py -t target_host -p port")
     print("-l --listen\t\t - listen on [host]:[port] for incoming connections")
@@ -30,12 +31,16 @@ def usage():
 
 
 def client_sender(buffer):
+    """Send and receive data to the target host."""
+
+    # create a client
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         # connect to our target host
         client.connect((target,port))
 
+        # check if we already have input and send it
         if len(buffer):
             client.send(buffer.encode())
 
@@ -45,21 +50,26 @@ def client_sender(buffer):
         while True:
             data = client.recv(4096)
 
+            # break if connection ends
             if not data:
                 break
 
+            # get the response and print it
             response += data.decode("utf-8")
             print(response, end="")
 
-            # wait for more input
+            # wait for more input and send it off
             try:
                 buffer = input("")
                 buffer += "\n"
                 client.send(buffer.encode("utf-8"))
             except EOFError:
+                # end on CTRL-D
                 print("CTRL-D detected")
                 break
 
+        # tidy up
+        client.close()
     except Exception as err:
         print("[*] Exception! Exiting.")
         print(str(err))
@@ -70,9 +80,10 @@ def client_sender(buffer):
 
 
 def server_loop():
+    """Start up the server listening for a client."""
     global target
 
-    # if not target is defined listen on all interfaces
+    # if no target is defined listen on all interfaces
     if not len(target):
         target = "0.0.0.0"
 
@@ -93,6 +104,7 @@ def server_loop():
 
 
 def run_command(command):
+    """Run a command and return the output"""
 
     # trim the new line
     command = command.rstrip()
@@ -108,15 +120,15 @@ def run_command(command):
 
 
 def client_handler(client_socket):
+    """Handle client input and perform the appropriate action."""
     global upload
     global execute
     global command
 
-    print("in client_handler")
-    # check for upload
+    # check for file upload
     if len(upload_destination):
         # read in all of the bytes and write to our destination
-        file_buffer = ""
+        file_buffer = b""
 
         # keep reading data until none is available
         while True:
@@ -139,16 +151,14 @@ def client_handler(client_socket):
             client_socket.send("Failed to save file to %s\r\n" % upload_destination)
 
 
-    # check for command execution
+    # check for single command execution
     if len(execute):
-
         # run the command
         output = run_command(execute)
         client_socket.send(output)
 
     # now we go into another loop if a command shell was requested
     if command:
-        print("Command is true")
         while True:
             # show a simple prompt
             client_socket.send("<BHP:#> ".encode("utf-8"))
@@ -176,7 +186,6 @@ def main():
         usage()
 
     # read the command line options
-
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hle:t:p:cu:", ["help", "listen", "execute", "target", "port", "command", "upload"])
     except getopt.GetoptError as err:
@@ -214,10 +223,8 @@ def main():
 
     # we are going to listen and potentially upload things, execute commands, and drop a shell back
     # depending on our command line options above
-
     if listen:
         server_loop()
-        #pass
 
 
 main()
