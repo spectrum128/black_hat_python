@@ -150,7 +150,6 @@ def server_loop(local_host, local_port, remote_host, remote_port, receive_first)
 
 
 def main():
-    ## 
     # no fancy command line parsing
     if len(sys.argv[1:]) != 5:
         print(f"Usage: ./proxy.py [localhost] [localport] [remotehost] [remoteport] [receive_first]")
